@@ -26,10 +26,6 @@ public class RAImpl implements RA {
             }
         }
 
-        // throws error if no rows match predicate
-        if (rel1.getSize() == 0) {
-            throw new UnsupportedOperationException("No rows match predicate");
-        }
         return rel1;
 
     }
@@ -48,9 +44,9 @@ public class RAImpl implements RA {
             reqCol.add(index);
         }
 
-        // ends program if the given attributes are not present
+        // throws exception if the given attributes are not present
         if (reqCol.isEmpty()) {
-            throw new UnsupportedOperationException("Attributes not in list");
+            throw new IllegalArgumentException("Attributes not in list");
         }
 
         // stores the associated types
