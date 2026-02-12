@@ -2,6 +2,7 @@ package uga.csx370.mydbimpl;
 
 import java.util.List;
 import java.util.HashSet;
+import java.sql.Types;
 import java.util.ArrayList;
 
 import uga.csx370.mydb.Predicate;
@@ -109,16 +110,60 @@ public class RAImpl implements RA {
         }
         // return a Relation where each row has the info of rel1 and rel2 at that row
         // where the value in the shared column are equal
-        Predicate pred = (row) -> {
-            // check the common attributes; if they're the same, return true
-            for (String attr : commonAttrs) {
-                if (!row.get(rel1.getAttrIndex(attr)).equals(row.get(rel2.getAttrIndex(i) + rel1.size())))
-                    return false;
-            }
-            return true;
-        };
 
-        return join(rel1, rel2, pred);
+        // go through commonAttrs of both relations: if the value is equal, add rel1's cells to 
+        // the row to insert and then add rel2's cells except for the commonAttr cells
+
+        // build the attribute names/types: do all rel1 first and then rel2's that aren't in list already
+        List<String> newAttrs = new ArrayList<>();
+        List<Type> newTypes = new ArrayList<>();
+        List<Integer> rel2CommonAttrIndices = new ArrayList<>();
+
+        for (int i = 0; i < rel1.getAttrs().size(); i++) {
+            newAttrs.add(rel1.getAttrs().get(i));
+            newTypes.add(rel1.getTypes().get(i));
+        }
+        for (int i = 0; i < rel2.getAttrs().size(); i++) {
+            if (!commonAttrs.contains(rel2.getAttrs().get(i))) {
+                newAttrs.add(rel2.getAttrs().get(i));
+                newTypes.add(rel2.getTypes().get(i));
+            } else {
+                // need to get array of indices that make up the commonAttr columns for rel2
+                rel2CommonAttrIndices.add(i);
+            }
+        }
+
+        Relation joinRelation = new RelationBuilder()
+        .attributeNames(newAttrs)
+        .attributeTypes(newTypes)
+        .build();
+
+        // go through each row of rel1 and rel2 and check the common attributes: 
+        // if they're equal, add the row to joinRelation
+        for (int i = 0; i < rel1.getSize(); i++) {
+            List<Cell> rowToInsert = new ArrayList<>(); 
+            for (Cell item : rel1.getRow(i)) {
+                rowToInsert.add(item);
+            }
+
+            for (int j = 0; j < rel2.getSize(); j++) {
+                List<Cell> addRel2Row = new ArrayList<>(rowToInsert);
+                for (int k = 0; k < rel2.getRow(j).size(); k++) {
+                    // don't add the cell if it's a commonAttr
+                    if (!rel2CommonAttrIndices.contains(k))
+                        addRel2Row.add(rel2.getRow(j).get(k));
+                }
+
+                // check the created row to add to make sure the commonAttrs are equal
+                boolean addRelation = true;
+                for (String attr : commonAttrs) {
+                    if (!rowToInsert.get(rel1.getAttrIndex(attr)).equals(rel2.getRow(j).get(rel2.getAttrIndex(attr))))
+                        addRelation = false;
+                }
+                if (addRelation) joinRelation.insert(addRel2Row);
+            }
+        }
+        return joinRelation;
 
     }
 
