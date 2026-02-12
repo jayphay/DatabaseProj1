@@ -17,15 +17,74 @@ public class RAImpl implements RA {
 
     @Override
     public Relation select(Relation rel, Predicate p) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'select'");
+        //Creates A relation that will store rows that fulfill the predicate
+        Relation rel1 = new RelationBuilder().attributeNames(rel.getAttrs()).attributeTypes(rel.getTypes()).build();
+
+        //Checks if rows match predicate and puts them in relation
+        for (int i = 0; i < rel.getSize(); i++) {
+            if (p.check(rel.getRow(i))) {
+                rel1.insert(rel.getRow(i));
+            }
+        }
+
+        // throws error if no rows match predicate
+        if (rel1.getSize() == 0) {
+            throw new UnsupportedOperationException("No rows match predicate");
+        }
+        return rel1;
+
     }
 
     @Override
+
     public Relation project(Relation rel, List<String> attrs) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'project'");
+        List<Type> attrTypes = rel.getTypes(); //gets all the attributes in a original Relation
+        List<String> attrNames = rel.getAttrs(); //gets all the types in a original Relation
+        List<Type> newAttrTypes = null; //creates a list to store the types associated with given attributes
+        List<Integer> reqCol = new ArrayList<>(); // creates list to store where each required type is
+
+        // stores where the required columns are
+        for (String col : attrs) {
+            int index = rel.getAttrIndex(col);
+            reqCol.add(index);
+        }
+
+        // ends program if the given attributes are not present
+        if (reqCol.isEmpty()) {
+            throw new UnsupportedOperationException("Attributes not in list");
+        }
+
+        // stores the associated types
+        for (int i = 0; i < attrTypes.size(); i++) {
+            for  (int j = 0; j < attrs.size(); j++) {
+                if (attrNames.get(i).equals(attrs.get(j))) {
+                    if (newAttrTypes == null) {
+                        newAttrTypes = new ArrayList<>();
+                        newAttrTypes.add(attrTypes.get(i));
+                    } else {
+                        newAttrTypes.add(attrTypes.get(i));
+                    }
+                }
+            }
+        }
+
+        // creates a new relation that will contain projected attributes
+        Relation rel1 = new RelationBuilder().attributeNames(attrs).attributeTypes(newAttrTypes).build();
+
+        // stores all required columns in new relation
+        for (int i = 0; i < rel.getSize(); i++) {
+            List<Cell> originalRow = rel.getRow(i);
+            List<Cell> newRow = new ArrayList<>();
+            for (int index : reqCol) {
+                newRow.add(originalRow.get(index));
+            }
+            rel1.insert(newRow);
+        }
+
+        return rel1;
+
     }
+
 
     @Override
     public Relation union(Relation rel1, Relation rel2) {
