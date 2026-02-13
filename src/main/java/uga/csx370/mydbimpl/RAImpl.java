@@ -2,7 +2,6 @@ package uga.csx370.mydbimpl;
 
 import java.util.List;
 import java.util.HashSet;
-import java.sql.Types;
 import java.util.ArrayList;
 
 import uga.csx370.mydb.Predicate;
@@ -84,26 +83,114 @@ public class RAImpl implements RA {
 
     @Override
     public Relation union(Relation rel1, Relation rel2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'union'");
+        checkCompatible(rel1, rel2);
+        Relation result = new RelationBuilder()
+                .attributeNames(rel1.getAttrs())
+                .attributeTypes(rel1.getTypes())
+                .build();
+        HashSet<String> seenRows = new HashSet<>();
+        for (int i = 0; i < rel1.getSize(); i++) {
+            List<Cell> row = rel1.getRow(i);
+            String rowKey = rowToString(row);
+            if (!seenRows.contains(rowKey)) {
+                seenRows.add(rowKey);
+                result.insert(row);
+            }
+        }
+        for (int i = 0; i < rel2.getSize(); i++) {
+            List<Cell> row = rel2.getRow(i);
+            String rowKey = rowToString(row);
+            if (!seenRows.contains(rowKey)) {
+                seenRows.add(rowKey);
+                result.insert(row);
+            }
+        }
+        return result;
     }
 
     @Override
     public Relation intersect(Relation rel1, Relation rel2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'intersect'");
+        checkCompatible(rel1, rel2);
+        Relation result = new RelationBuilder()
+                .attributeNames(rel1.getAttrs())
+                .attributeTypes(rel1.getTypes())
+                .build();
+        HashSet<String> rel2Rows = new HashSet<>();
+        for (int i = 0; i < rel2.getSize(); i++) {
+            rel2Rows.add(rowToString(rel2.getRow(i)));
+        }
+        HashSet<String> addedRows = new HashSet<>();
+        for (int i = 0; i < rel1.getSize(); i++) {
+            List<Cell> row = rel1.getRow(i);
+            String rowKey = rowToString(row);
+            if (rel2Rows.contains(rowKey) && !addedRows.contains(rowKey)) {
+                addedRows.add(rowKey);
+                result.insert(row);
+            }
+        }
+        return result;
+    }
+
+    private void checkCompatible(Relation rel1, Relation rel2) {
+        if (!rel1.getAttrs().equals(rel2.getAttrs()) || !rel1.getTypes().equals(rel2.getTypes())) {
+            throw new IllegalArgumentException("Relations are not compatible for union/intersect/diff.");
+        }
+    }
+
+    private String rowToString(List<Cell> row) {
+        StringBuilder sb = new StringBuilder();
+        for (Cell c : row) {
+            sb.append(c.toString()).append("|");
+        }
+        return sb.toString();
     }
 
     @Override
     public Relation diff(Relation rel1, Relation rel2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'diff'");
+        checkCompatible(rel1, rel2);
+        Relation result = new RelationBuilder()
+                .attributeNames(rel1.getAttrs())
+                .attributeTypes(rel1.getTypes())
+                .build();
+        HashSet<String> rel2Rows = new HashSet<>();
+        for (int i = 0; i < rel2.getSize(); i++) {
+            rel2Rows.add(rowToString(rel2.getRow(i)));
+        }
+        HashSet<String> addedRows = new HashSet<>();
+        for (int i = 0; i < rel1.getSize(); i++) {
+            List<Cell> row = rel1.getRow(i);
+            String rowKey = rowToString(row);
+            if (!rel2Rows.contains(rowKey) && !addedRows.contains(rowKey)) {
+                addedRows.add(rowKey);
+                result.insert(row);
+            }
+        }
+        return result;
     }
 
     @Override
     public Relation rename(Relation rel, List<String> origAttr, List<String> renamedAttr) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'rename'");
+        if (origAttr == null || renamedAttr == null || origAttr.size() != renamedAttr.size()) {
+            throw new IllegalArgumentException("origAttr and renamedAttr must have matching sizes.");
+        }
+        for (String attr : origAttr) {
+            if (!rel.hasAttr(attr)) {
+                throw new IllegalArgumentException("Attribute not present in relation: " + attr);
+            }
+        }
+        List<String> newAttrs = new ArrayList<>();
+        for (String attr : rel.getAttrs()) {
+            int idx = origAttr.indexOf(attr);
+            newAttrs.add(idx >= 0 ? renamedAttr.get(idx) : attr);
+        }
+        Relation result = new RelationBuilder()
+                .attributeNames(newAttrs)
+                .attributeTypes(rel.getTypes())
+                .build();
+        for (int i = 0; i < rel.getSize(); i++) {
+            result.insert(rel.getRow(i));
+        }
+        return result;
     }
 
     @Override
@@ -224,9 +311,8 @@ public class RAImpl implements RA {
 
     @Override
     public Relation join(Relation rel1, Relation rel2, Predicate p) {
-        // TODO Auto-generated method stub
-        // this is same as cartesianProduct but without the Exception throwing when columns are same
-        throw new UnsupportedOperationException("Unimplemented method 'join'");
+        Relation product = cartesianProduct(rel1, rel2);
+        return select(product, p);
     }
 
 }
