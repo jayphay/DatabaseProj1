@@ -46,7 +46,7 @@ public class RAImpl implements RA {
         }
 
         // throws exception if the given attributes are not present
-        if (reqCol.isEmpty()) {
+        if (reqCol.size() != attrs.size()) {
             throw new IllegalArgumentException("Attributes not in list");
         }
 
