@@ -3,7 +3,6 @@ package uga.csx370.mydbimpl;
 import java.util.List;
 import java.util.HashSet;
 import java.util.ArrayList;
-
 import uga.csx370.mydb.Predicate;
 import uga.csx370.mydb.RA;
 import uga.csx370.mydb.Relation;
@@ -50,14 +49,14 @@ public class RAImpl implements RA {
         }
 
         // stores the associated types
-        for (int i = 0; i < attrTypes.size(); i++) {
-            for  (int j = 0; j < attrs.size(); j++) {
-                if (attrNames.get(i).equals(attrs.get(j))) {
+        for (int i = 0; i < attrs.size(); i++) {
+            for  (int j = 0; j < attrTypes.size(); j++) {
+                if (attrNames.get(j).equals(attrs.get(i))) {
                     if (newAttrTypes == null) {
                         newAttrTypes = new ArrayList<>();
-                        newAttrTypes.add(attrTypes.get(i));
+                        newAttrTypes.add(attrTypes.get(j));
                     } else {
-                        newAttrTypes.add(attrTypes.get(i));
+                        newAttrTypes.add(attrTypes.get(j));
                     }
                 }
             }
