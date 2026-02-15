@@ -1,4 +1,3 @@
-# DatabaseProj1
 ugrd 18
 Shachin Chakraborty: Select and Project
 Jack Phalen: Cartesian Product and Natural Join

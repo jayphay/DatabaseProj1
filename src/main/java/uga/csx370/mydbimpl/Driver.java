@@ -16,7 +16,6 @@ import uga.csx370.mydb.Type;
 public class Driver {
 
     public static void main(String[] args) {
-        System.out.println("Myid: 811059368");
 
         // Load all relations (uni_in_class database schema)
         Relation instructor = new RelationBuilder()
