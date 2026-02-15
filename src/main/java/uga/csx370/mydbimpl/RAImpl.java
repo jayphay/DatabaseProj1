@@ -87,12 +87,11 @@ public class RAImpl implements RA {
                 .attributeNames(rel1.getAttrs())
                 .attributeTypes(rel1.getTypes())
                 .build();
-        HashSet<String> seenRows = new HashSet<>();
+        HashSet<List<Cell>> seenRows = new HashSet<>();
         for (int i = 0; i < rel1.getSize(); i++) {
             List<Cell> row = rel1.getRow(i);
-            String rowKey = rowToString(row);
-            if (!seenRows.contains(rowKey)) {
-                seenRows.add(rowKey);
+            if (!seenRows.contains(row)) {
+                seenRows.add(row);
                 result.insert(row);
             }
         }
@@ -114,16 +113,15 @@ public class RAImpl implements RA {
                 .attributeNames(rel1.getAttrs())
                 .attributeTypes(rel1.getTypes())
                 .build();
-        HashSet<String> rel2Rows = new HashSet<>();
+        HashSet<List<Cell>> rel2Rows = new HashSet<>();
         for (int i = 0; i < rel2.getSize(); i++) {
-            rel2Rows.add(rowToString(rel2.getRow(i)));
+            rel2Rows.add(rel2.getRow(i));
         }
-        HashSet<String> addedRows = new HashSet<>();
+        HashSet<List<Cell>> addedRows = new HashSet<>();
         for (int i = 0; i < rel1.getSize(); i++) {
             List<Cell> row = rel1.getRow(i);
-            String rowKey = rowToString(row);
-            if (rel2Rows.contains(rowKey) && !addedRows.contains(rowKey)) {
-                addedRows.add(rowKey);
+            if (rel2Rows.contains(row) && !addedRows.contains(row)) {
+                addedRows.add(row);
                 result.insert(row);
             }
         }
